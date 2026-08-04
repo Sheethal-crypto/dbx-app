@@ -69,6 +69,25 @@ with left:
                 st.success(f"Status updated to {new_status.replace('_', ' ')}.")
                 st.rerun()
 
+        with st.expander("Delete ticket"):
+            st.warning(
+                f"Deleting #{selected:04d} also removes its "
+                f"{ticket['message_count']} message(s). This cannot be undone."
+            )
+            typed = st.text_input(
+                f"Type DELETE {selected} to confirm", key=f"del_{selected}"
+            )
+            if st.button("Delete permanently"):
+                if typed.strip() != f"DELETE {selected}":
+                    st.error("Confirmation text does not match. Nothing was deleted.")
+                else:
+                    execute(
+                        f"DELETE FROM {SCHEMA}.tickets WHERE ticket_id = %s",
+                        (selected,),
+                    )
+                    st.success(f"Deleted ticket #{selected:04d}.")
+                    st.rerun()
+
         st.subheader("Thread")
         msg_rows = query(
             f"""SELECT author, message_text, created_at
