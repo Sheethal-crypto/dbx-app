@@ -8,6 +8,7 @@ CSS = """
 :root {
   --ground: #EDEFEA;
   --panel: #F7F8F5;
+  --field: #FFFFFF;
   --ink: #17201C;
   --ink-soft: #5A655E;
   --rule: #CBD2C8;
@@ -39,6 +40,7 @@ h1 {
   color: var(--ink-soft);
 }
 
+/* Status tiles */
 .tiles { display: flex; gap: 0.6rem; margin: 0.4rem 0 1.4rem 0; flex-wrap: wrap; }
 .tile {
   flex: 1 1 120px;
@@ -55,6 +57,7 @@ h1 {
   font-size: 2.4rem; font-weight: 700; line-height: 1; color: var(--ink);
 }
 
+/* Board rows */
 .row {
   display: grid;
   grid-template-columns: 4px 5.5rem 1fr auto;
@@ -81,6 +84,7 @@ h1 {
   text-transform: uppercase; color: var(--ink-soft); white-space: nowrap;
 }
 
+/* Ticket detail header */
 .detail {
   background: var(--panel);
   border: 1px solid var(--rule);
@@ -97,6 +101,7 @@ h1 {
   font-weight: 600 !important;
 }
 
+/* Message thread */
 .msg {
   border-left: 2px solid var(--rule);
   padding: 0.1rem 0 0.5rem 0.85rem;
@@ -117,17 +122,58 @@ h1 {
   font-size: 0.8rem;
 }
 
+/* Forms */
 div[data-testid="stForm"] {
   background: var(--panel);
   border: 1px solid var(--rule);
   border-radius: 0;
 }
+
 .stButton button, div[data-testid="stForm"] button {
   border-radius: 0 !important;
   font-family: 'Barlow Condensed', sans-serif !important;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+/* Inputs: visible at rest, not only on focus */
+div[data-baseweb="input"],
+div[data-baseweb="textarea"],
+div[data-baseweb="select"] > div {
+  border: 1px solid var(--rule) !important;
+  border-radius: 0 !important;
+  background: var(--field) !important;
+  transition: border-color 120ms ease;
+}
+
+div[data-baseweb="input"]:hover,
+div[data-baseweb="textarea"]:hover,
+div[data-baseweb="select"] > div:hover {
+  border-color: var(--ink-soft) !important;
+}
+
+div[data-baseweb="input"]:focus-within,
+div[data-baseweb="textarea"]:focus-within,
+div[data-baseweb="select"] > div:focus-within {
+  border-color: var(--in_progress) !important;
+  box-shadow: 0 0 0 2px rgba(31, 95, 139, 0.18) !important;
+}
+
+div[data-baseweb="select"], div[data-baseweb="select"] * { cursor: pointer !important; }
+li[role="option"] { cursor: pointer !important; }
+
+label[data-testid="stWidgetLabel"] p {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
 }
 </style>
 """
