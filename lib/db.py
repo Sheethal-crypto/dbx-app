@@ -20,9 +20,8 @@ def get_pool() -> ConnectionPool:
             kwargs["password"] = cred.token
             return super().connect(conninfo, **kwargs)
 
-    host = os.environ.get("LAKEBASE_HOST") or os.environ["PGHOST"]
     conninfo = (
-        f"host={host} "
+        f"host={os.environ['PGHOST']} "
         f"port={os.environ.get('PGPORT', '5432')} "
         f"dbname={os.environ['PGDATABASE']} "
         f"user={os.environ['PGUSER']} "
