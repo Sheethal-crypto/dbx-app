@@ -33,7 +33,8 @@ def get_pool() -> ConnectionPool:
         conninfo=conninfo,
         connection_class=OAuthConnection,
         min_size=1,
-        max_size=3,
+        max_size=2,
+        timeout=15,
         open=True,
     )
 
