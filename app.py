@@ -1,20 +1,23 @@
 import streamlit as st
 from lib.db import query, execute, SCHEMA
+from lib import style
 
 st.set_page_config(page_title="Support Desk", layout="wide")
+style.inject()
 
 STATUSES = ["open", "in_progress", "resolved"]
 PRIORITIES = ["low", "medium", "high"]
 
 
 def load_tickets(status_filter):
+    where = "WHERE t.status = %s" if status_filter != "all" else ""
     sql = f"""
         SELECT t.ticket_id, t.title, t.status, t.priority,
                t.created_by, t.created_at,
                COUNT(m.message_id) AS message_count
         FROM {SCHEMA}.tickets t
         LEFT JOIN {SCHEMA}.ticket_messages m ON m.ticket_id = t.ticket_id
-        {"WHERE t.status = %s" if status_filter != "all" else ""}
+        {where}
         GROUP BY t.ticket_id
         ORDER BY t.created_at DESC
     """
@@ -24,76 +27,66 @@ def load_tickets(status_filter):
 st.title("Support Desk")
 
 try:
-    stats = query(f"""
-        SELECT status, COUNT(*) AS n FROM {SCHEMA}.tickets GROUP BY status
-    """)
+    stats = query(f"SELECT status, COUNT(*) AS n FROM {SCHEMA}.tickets GROUP BY status")
 except Exception as exc:
-    st.error("Could not reach the database.")
+    st.error("Cannot reach the database. Check the app's database resource and grants.")
     st.exception(exc)
     st.stop()
 
 counts = {r["status"]: r["n"] for r in stats}
-cols = st.columns(4)
-cols[0].metric("Total", sum(counts.values()))
-for col, s in zip(cols[1:], STATUSES):
-    col.metric(s.replace("_", " ").title(), counts.get(s, 0))
+style.tiles(sum(counts.values()), counts, STATUSES)
 
-st.divider()
-left, right = st.columns([3, 2])
+left, right = st.columns([3, 2], gap="large")
 
 with left:
-    st.subheader("Tickets")
+    st.subheader("Board")
     chosen = st.selectbox("Filter by status", ["all"] + STATUSES)
     tickets = load_tickets(chosen)
 
     if not tickets:
-        st.info("No tickets match this filter.")
+        style.empty("No tickets with this status. Create one to get started.")
     else:
-        st.dataframe(tickets, use_container_width=True, hide_index=True)
+        style.board(tickets)
 
     ids = [t["ticket_id"] for t in tickets]
     selected = st.selectbox("Open ticket", ids) if ids else None
 
     if selected:
         ticket = next(t for t in tickets if t["ticket_id"] == selected)
-        st.markdown(f"### #{ticket['ticket_id']} {ticket['title']}")
-        st.caption(
-            f"{ticket['status']} | {ticket['priority']} | "
-            f"opened by {ticket['created_by']}"
-        )
+        style.detail_header(ticket)
 
         new_status = st.selectbox(
             "Status", STATUSES, index=STATUSES.index(ticket["status"]), key="status_sel"
         )
         if st.button("Update status"):
             if new_status == ticket["status"]:
-                st.warning("Status unchanged.")
+                st.warning(f"Already {new_status.replace('_', ' ')}.")
             else:
                 execute(
                     f"UPDATE {SCHEMA}.tickets SET status = %s WHERE ticket_id = %s",
                     (new_status, selected),
                 )
-                st.success(f"Status set to {new_status}.")
+                st.success(f"Status updated to {new_status.replace('_', ' ')}.")
                 st.rerun()
 
-        st.markdown("#### Messages")
-        messages = query(
+        st.subheader("Thread")
+        msg_rows = query(
             f"""SELECT author, message_text, created_at
                 FROM {SCHEMA}.ticket_messages
                 WHERE ticket_id = %s ORDER BY created_at""",
             (selected,),
         )
-        for m in messages:
-            with st.chat_message("user"):
-                st.markdown(f"**{m['author']}** · {m['created_at']:%Y-%m-%d %H:%M}")
-                st.write(m["message_text"])
+        if msg_rows:
+            style.messages(msg_rows)
+        else:
+            style.empty("No messages yet. Add the first one below.")
 
         with st.form("add_message", clear_on_submit=True):
             author = st.text_input("Your name")
             body = st.text_area("Message")
             if st.form_submit_button("Add message"):
                 if not author.strip() or not body.strip():
-                    st.error("Name and message are both required.")
+                    st.error("Enter both your name and a message.")
                 else:
                     execute(
                         f"""INSERT INTO {SCHEMA}.ticket_messages
@@ -115,7 +108,7 @@ with right:
             if len(title.strip()) < 5:
                 st.error("Title must be at least 5 characters.")
             elif not created_by.strip():
-                st.error("Created by is required.")
+                st.error("Enter who is opening this ticket.")
             else:
                 rows = query(
                     f"""INSERT INTO {SCHEMA}.tickets
@@ -130,5 +123,5 @@ with right:
                             (ticket_id, message_text, author) VALUES (%s, %s, %s)""",
                         (new_id, first_message.strip(), created_by.strip()),
                     )
-                st.success(f"Created ticket #{new_id}.")
+                st.success(f"Created ticket #{new_id:04d}.")
                 st.rerun()
