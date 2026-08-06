@@ -1,3 +1,0 @@
-﻿streamlit
-psycopg[binary,pool]
-databricks-sdk>=0.81.0
