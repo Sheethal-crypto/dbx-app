@@ -1,0 +1,4 @@
+streamlit
+databricks-sdk[openai]>=0.38.0
+databricks-vectorsearch
+requests
