@@ -1,0 +1,16 @@
+# Base theme. Anything not expressible here is done with targeted CSS in app.py.
+
+[theme]
+base = "light"
+primaryColor = "#0F766E"
+backgroundColor = "#F6F4F1"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1A1A1A"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+showErrorDetails = true
+
+[browser]
+gatherUsageStats = false
