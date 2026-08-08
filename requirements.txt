@@ -2,3 +2,4 @@ streamlit
 databricks-sdk[openai]
 databricks-vectorsearch
 requests
+streamlit-mic-recorder
